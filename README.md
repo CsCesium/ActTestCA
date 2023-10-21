@@ -6,3 +6,6 @@
 |`--static` | Static assets directory            | ./static      |
 |`--port`   | Port to bind to                    | 3000          |
 
+Hi, please use commit message to control
+HIGH 
+CRITICAL
