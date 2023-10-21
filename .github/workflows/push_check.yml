@@ -7,7 +7,6 @@ on:
                
 jobs:
     Begin-Check:
-        name: Check_Commit_Message
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -17,6 +16,7 @@ jobs:
               run: |
                 commit_message=$(git log -1 --pretty=%B)
                 echo "commit message: $commit_message"
+                echo "COMMIT_MESSAGE=$commit_message" >> $GITHUB_ENV
                 if [[ $commit_message == "#NORUN"* ]]; then
                   echo "Commit message starts with #NORUN. Skipping workflow."
                   exit 1  
@@ -32,8 +32,9 @@ jobs:
                 ignore-unfixed: true
                 format: 'table'
                 output: 'trivy-results.table'
-                severity: '$commit_message'
-              
+                severity: ${{ env.COMMIT_MESSAGE }}
+           
+
             - name: Check Trivy Results
               id: check-trivy-results
               run: |
