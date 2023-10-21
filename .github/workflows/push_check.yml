@@ -24,7 +24,11 @@ jobs:
                   echo "Commit message does not start with #NORUN. Continuing workflow."
                 fi
             
-
+    trivy-scan:
+        runs-on: ubuntu-latest
+        needs: Begin-Check
+        if: success()
+        steps:
             - name: Trivy Scan
               uses: aquasecurity/trivy-action@master
               with:
@@ -72,7 +76,7 @@ jobs:
     success-package:
         name: Success_Package
         runs-on: ubuntu-latest
-        needs: Begin-Check
+        needs: trivy-scan
         if: failure()
         steps:
           -
@@ -81,6 +85,8 @@ jobs:
 
           - name: Install Cosign
             uses: sigstore/cosign-installer@v3.1.1
+            with:
+              cosign-release: 'v2.2.0'
 
           - name: Check install
             run: cosign version
@@ -115,26 +121,26 @@ jobs:
             run: |
               cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${TAGS}@${DIGEST}"
             env:
-              TAGS: ${{ steps.docker_meta.outputs.tags }}
+              TAGS: cscesium/ca01:${{ github.sha }}
               COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
               COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
               DIGEST: ${{ steps.build-and-push.outputs.digest }}
 
-          # - name: Send Success Report
-          #   uses: rtCamp/action-slack-notify@v2
-          #   env:
-          #     SLACK_CHANNEL: test-submission
-          #     SLACK_COLOR: 00ff00
-          #     SLACK_TITLE: Image build and signed -${{ secrets.NAME }}
-          #     SLACK_USERNAME: ${{ secrets.NAME }}
-          #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          #     SLACK_FOOTER: 'Power by Hipper'
-          #     SLACK_MESSAGE: |
-          #               *Name:* Yu Zejing 
-          #               *Matriculation:* A0287259L 
-          #               *Email:* <mailto:e1285205@u.nus.edu | e1285205@u.nus.edu> 
-          #               *Git:* <${{ github.repository.url }}| ${{ github.repository.url }}> 
-          #               *Image:* <${{ github.repository.url }}| ${{ github.repository.url }}> 
+          - name: Send Success Report
+            uses: rtCamp/action-slack-notify@v2
+            env:
+              SLACK_CHANNEL: test-submission
+              SLACK_COLOR: 00ff00
+              SLACK_TITLE: Image build and signed -${{ secrets.NAME }}
+              SLACK_USERNAME: ${{ secrets.NAME }}
+              SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+              SLACK_FOOTER: 'Power by Hipper'
+              SLACK_MESSAGE: |
+                        *Name:* Yu Zejing 
+                        *Matriculation:* A0287259L 
+                        *Email:* <mailto:e1285205@u.nus.edu | e1285205@u.nus.edu> 
+                        *Git:* <https://github.com/${{ github.repository }}| https://github.com/${{ github.repository }}> 
+                        *Image:* <${{ secrets.DOCKER_URL }}| ${{ secrets.DOCKER_URL }}> 
                       
 
 
