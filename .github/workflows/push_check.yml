@@ -32,7 +32,7 @@ jobs:
                 ignore-unfixed: true
                 format: 'table'
                 output: 'trivy-results.table'
-                severity: '${{ github.event.inputs.NAME }}'
+                severity: '$commit_message'
               
             - name: Check Trivy Results
               id: check-trivy-results
